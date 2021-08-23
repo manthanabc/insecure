@@ -4,11 +4,13 @@ use bevy::prelude::*;
 
 const PLAYER_SPRITE: &str = "player_a_01.png";
 const TIME_STEP: f32 = 1. / 60. ;
+const SPRITES: &str = "assets.png";
 //Entity, Component, System, Resource
 
 // < Resources >
 pub struct Materials {
 	player_materials: Handle<ColorMaterial>,
+	sprites_materials: Handle<ColorMaterial>,
 }
 struct WinSize {
 	w: f32,
@@ -22,6 +24,12 @@ struct PlayerSpeed(f32);
 impl Default for PlayerSpeed {
 	fn default() -> Self {
 		Self(100.)
+	}
+}
+struct Wall(f32, f32);
+impl Default for Wall {
+	fn default() -> Self{
+		Self(0., 0.)
 	}
 }
 struct RigidBody;
@@ -60,7 +68,8 @@ fn setup(
 
 	// create the main resources
 	commands.insert_resource(Materials {
-		player_materials: materials.add(asset_server.load(PLAYER_SPRITE).into())
+		player_materials: materials.add(asset_server.load(PLAYER_SPRITE).into()),
+		sprites_materials: materials.add(asset_server.load(SPRITES).into())
 	});
 	commands.insert_resource(WinSize {
 		w: window.width(),
@@ -71,6 +80,15 @@ fn setup(
 	//position window
 	let mut window = windows.get_primary_mut().unwrap();
 	window.set_position(IVec2::new(500, 500));
+
+
+	// adding the walls
+	commands.spawn_bundle(SpriteBundle {
+		material: materials.add(asset_server.load(SPRITES).into()),
+		..Default::default()
+	})
+	.insert(RigidBody)
+	.insert(Wall::default());
 }
 
 fn player_spawn(mut commands: Commands, materials: Res<Materials>, win_size: Res<WinSize>) {
@@ -113,8 +131,22 @@ fn player_movement(
 	}
 }
 
-fn collision(mut query: Query<(With<RigidBody>)>) {
-	if let Ok((rigidbody)) = query.single_mut() {
-		println!("{:?}", rigidbody);
+fn collision(
+	mut wallQuery: Query<(&Wall, With<RigidBody>)>,
+	mut playerQuery: Query<(&PlayerSpeed, &mut Transform, With<Player>)>
+	) {
+
+	if let Ok((Wall(x, y),rigidbody)) = wallQuery.single_mut() {
+		if let Ok((speed, mut transform, _)) = playerQuery.single_mut() {
+			let pos = transform.translation;
+			//println!("{}, {},,wall pos {}, {}" ,pos.x, pos.y, x, y);
+			if pos.x > *x && pos.y > *y {
+				println!("ahead");
+			} 
+			if *x + 300. < pos.x && *y +300. < pos.y {
+				println!("blow");
+			}
+			println!("none");
+		} 
 	}
 }
