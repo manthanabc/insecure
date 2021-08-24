@@ -85,6 +85,10 @@ fn setup(
 	// adding the walls
 	commands.spawn_bundle(SpriteBundle {
 		material: materials.add(asset_server.load(SPRITES).into()),
+		transform: Transform {
+					translation: Vec3::new(350., -200., 1.),
+					..Default::default()
+				},
 		..Default::default()
 	})
 	.insert(RigidBody)
@@ -132,21 +136,18 @@ fn player_movement(
 }
 
 fn collision(
-	mut wallQuery: Query<(&Wall, With<RigidBody>)>,
-	mut playerQuery: Query<(&PlayerSpeed, &mut Transform, With<Player>)>
+	mut wall_query: Query<(&Wall, With<RigidBody>)>,
+	mut player_query: Query<(&PlayerSpeed, &mut Transform, With<Player>)>
 	) {
 
-	if let Ok((Wall(x, y),rigidbody)) = wallQuery.single_mut() {
-		if let Ok((speed, mut transform, _)) = playerQuery.single_mut() {
+	if let Ok((Wall(x, y),rigidbody)) = wall_query.single_mut() {
+		if let Ok((speed, mut transform, _)) = player_query.single_mut() {
 			let pos = transform.translation;
-			//println!("{}, {},,wall pos {}, {}" ,pos.x, pos.y, x, y);
 			if pos.x > *x && pos.y > *y {
-				println!("ahead");
+				if pos.x < *x + 50. && pos.y < *y + 50.{
+					println!("colliding");
+				}
 			} 
-			if *x + 300. < pos.x && *y +300. < pos.y {
-				println!("blow");
-			}
-			println!("none");
 		} 
 	}
 }
