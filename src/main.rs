@@ -1,9 +1,10 @@
 #![allow(unused)]
 
 use bevy::prelude::*;
+use bevy::sprite::collide_aabb::{collide, Collision};
 
 const PLAYER_SPRITE: &str = "player_a_01.png";
-const SPRITES: &str = "assets.png";
+const SPRITES: &str = "wall.png";
 //Entity, Component, System, Resource
 
 // < Resources >
@@ -19,12 +20,19 @@ struct WinSize {
 
 // < Components>
 struct Player;
-struct PlayerSpeed(f32);
+struct PlayerSpeed(f32, f32);
 impl Default for PlayerSpeed {
     fn default() -> Self {
-        Self(100.)
+        Self(100., 100.)
     }
 }
+impl PlayerSpeed {
+	fn set(&mut self, speedx: f32, speedy: f32) {
+		self.0 = speedx;
+        self.1 = speedy;
+	}
+}
+struct Colliding(bool);
 struct Wall(f32, f32);
 impl Default for Wall {
     fn default() -> Self {
@@ -86,13 +94,27 @@ fn setup(
 		.spawn_bundle(SpriteBundle {
 		material: materials.add(asset_server.load(SPRITES).into()),
 		transform: Transform {
-					translation: Vec3::new(350., -200., 1.),
+					translation: Vec3::new(0., 0., 1.),
+                    scale: Vec3::new(0.15, 0.2, 1.),
 					..Default::default()
 				},
 		..Default::default()
 	})
 	.insert(RigidBody)
 	.insert(Wall::default());
+
+    // walls collision box
+    commands
+        .spawn_bundle(SpriteBundle {
+            material: materials.add(Color::rgb(1., 0.7, 0.7).into()),
+            // transform: Transform {
+            //     translation: Vec3::new(0., bottom + 25., 10.),
+            //     scale: Vec3::new(0.5, 0.5, 1.),
+            //     ..Default::default()
+            // },
+            sprite: Sprite::new(Vec2::new(100., 100.)),
+            ..Default::default()
+        });
 }
 
 fn player_spawn(mut commands: Commands, materials: Res<Materials>, win_size: Res<WinSize>) {
@@ -106,11 +128,13 @@ fn player_spawn(mut commands: Commands, materials: Res<Materials>, win_size: Res
                 scale: Vec3::new(0.5, 0.5, 1.),
                 ..Default::default()
             },
-            // sprite: Sprite::new(Vec2::new(100., 50.)),
+            //sprite: Sprite::new(Vec2::new(100., 50.)),
             ..Default::default()
         })
         .insert(Player)
-        .insert(PlayerSpeed::default());
+        .insert(PlayerSpeed::default())
+        .insert(Colliding(false));
+
 }
 
 fn player_movement(
@@ -135,25 +159,50 @@ fn player_movement(
         };
         transform.translation += Vec3::new(
             dirx * speed.0 * time.delta_seconds(),
-            diry * speed.0 * time.delta_seconds(),
+            diry * speed.1 * time.delta_seconds(),
             0.,
         );
     }
 }
 
 fn collision(
+	time: Res<Time>,
 	mut wall_query: Query<(&Wall, With<RigidBody>)>,
-	mut player_query: Query<(&PlayerSpeed, &mut Transform, With<Player>)>
+	mut player_query: Query<(&mut PlayerSpeed, &mut Transform, &Sprite, With<Colliding>, With<Player>)>
 	) {
 
 	if let Ok((Wall(x, y),rigidbody)) = wall_query.single_mut() {
-		if let Ok((speed, mut transform, _)) = player_query.single_mut() {
-			let pos = transform.translation;
-			if pos.x > *x && pos.y > *y {
-				if pos.x < *x + 100. && pos.y < *y + 100.{
-					println!("colliding");
-				}
-			} 
-		} 
+		if let Ok((mut speed, mut transform, mut colliding, sprite, _)) = player_query.single_mut() {
+			let mut pos = transform.translation;
+			// if pos.x > *x && pos.y > *y {
+			// 	if pos.x < *x + 100. && pos.y < *y + 100.{
+			// 		colliding = true;
+			// 		pos.x = 0.;
+			// 	} else {
+			// 		colliding = false;
+			// 	}
+			// } else {
+			// 	colliding = false;
+			// }
+            let collision = collide(
+                transform.translation,
+                Vec2::new(60., 40.),
+                //sprite.size(),
+                Vec3::new(0., 0., 10.),
+                Vec2::new(100., 100.),
+            );
+            if let Some(collision) = collision {
+                match collision {
+                        Collision::Left  => speed.0 *= if speed.0 > 0.0 { -1. } else { 1. },
+                        Collision::Right => speed.0 *= if speed.0 < 0.0 {  1. } else {-1. },
+                        Collision::Top   => speed.1 *= if speed.1 < 0.0 {  1. } else {-1. },
+                        Collision::Bottom=> speed.1 *= if speed.1 > 0.0 { -1. } else { 1. },
+                    }
+            } else {
+                speed.0 = 100.;
+                speed.1 = 100.;
+             }
+			//println!("{}", colliding);
+		}
 	}
 }
