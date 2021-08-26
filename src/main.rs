@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::{collide, Collision};
 
-const PLAYER_SPRITE: &str = "player_a_01.png";
+const PLAYER_SPRITE: &str = "submarine.png";
 const SPRITES: &str = "wall.png";
 //Entity, Component, System, Resource
 
@@ -44,7 +44,7 @@ struct RigidBody;
 
 fn main() {
     App::build()
-        .insert_resource(ClearColor(Color::rgb(0.03, 0.01, 0.01)))
+        .insert_resource(ClearColor(Color::rgb(0.078125, 0.203125, 0.390625)))
         .insert_resource(WindowDescriptor {
             title: "Rust Invaders".to_string(),
             width: 590.0,
