@@ -56,7 +56,7 @@ fn main() {
     App::build()
         .insert_resource(ClearColor(Color::rgb(0.078125, 0.203125, 0.390625)))
         .insert_resource(WindowDescriptor {
-            title: "Rust Invaders".to_string(),
+            title: "Danger dive".to_string(),
             width: 640.0,
             height: 480.0,
             ..Default::default()
