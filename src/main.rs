@@ -48,8 +48,8 @@ struct RigidBody;
 // </Components>
 
 fn main() {
-    App::build()
-        .insert_resource(ClearColor(Color::rgb(0.078125, 0.203125, 0.390625)))
+    let mut app = App::build();
+    app.insert_resource(ClearColor(Color::rgb(0.078125, 0.203125, 0.390625)))
         .insert_resource(WindowDescriptor {
             title: "Danger dive".to_string(),
             width: 640.0,
@@ -63,8 +63,12 @@ fn main() {
             SystemStage::single(player_spawn.system()),
         )
         .add_system(player_movement.system())
-        .add_system(collision.system())
-        .run();
+        .add_system(collision.system());
+
+    #[cfg(target_arch = "wasm32")]
+    app.add_plugin(bevy_webgl2::WebGL2Plugin);
+
+    app.run();
 }
 
 fn setup(
