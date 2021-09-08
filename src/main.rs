@@ -100,16 +100,15 @@ fn setup(
     window.set_position(IVec2::new(500, 500));
 
     // adding the walls
-    commands
-        .spawn_bundle(SpriteBundle {
-            material: materials.add(asset_server.load(BACKGROUD).into()),
-            transform: Transform {
-                translation: Vec3::new(0., 0., 1.),
-                scale: Vec3::new(1.0, 1.0, 1.),
-                ..Default::default()
-            },
+    commands.spawn_bundle(SpriteBundle {
+        material: materials.add(asset_server.load(BACKGROUD).into()),
+        transform: Transform {
+            translation: Vec3::new(0., 0., 1.),
+            scale: Vec3::new(1.0, 1.0, 1.),
             ..Default::default()
-        });
+        },
+        ..Default::default()
+    });
     // adding the mines
     let mut rng = rand::thread_rng();
     let random: f32 = rng.gen();
@@ -117,7 +116,13 @@ fn setup(
         .spawn_bundle(SpriteBundle {
             material: materials.add(asset_server.load(MINE).into()),
             transform: Transform {
-                translation: Vec3::new(window.height() / 2., random * (-1.*(-window.height() / 2. + 100.)+ window.height()/2.) -1. * window.height() / 2. + 100., 5.),
+                translation: Vec3::new(
+                    window.height() / 2.,
+                    random * (-1. * (-window.height() / 2. + 100.) + window.height() / 2.)
+                        - 1. * window.height() / 2.
+                        + 100.,
+                    5.,
+                ),
                 scale: Vec3::new(1.0, 1.0, 1.),
                 ..Default::default()
             },
@@ -135,10 +140,8 @@ fn player_spawn(mut commands: Commands, materials: Res<Materials>, win_size: Res
             material: materials.player_materials.clone(),
             transform: Transform {
                 translation: Vec3::new(-100., bottom + 25., 10.),
-                scale: Vec3::new(0.5, 0.5, 1.),
                 ..Default::default()
             },
-            //sprite: Sprite::new(Vec2::new(100., 50.)),
             ..Default::default()
         })
         .insert(Player)
@@ -153,14 +156,7 @@ fn player_movement(
     mut query: Query<(&mut PlayerSpeed, &mut Transform, With<Player>)>,
 ) {
     if let Ok((mut speed, mut transform, _)) = query.single_mut() {
-        // let dirx = if keyboard_input.pressed(KeyCode::Left) {
-        //     -1.
-        // } else if keyboard_input.pressed(KeyCode::Right) {
-        //     1.
-        // } else {
-        //     0.
-        // };
-        let bottom= -1. * win_size.h/2. + 100.;
+        let bottom = -1. * win_size.h / 2. + 100.;
         let dirx = 0.;
         let diry = if keyboard_input.pressed(KeyCode::Down) {
             -1.
@@ -172,10 +168,10 @@ fn player_movement(
         speed.1 += 5. * diry;
         speed.1 -= 1.;
         if speed.1 > 150. {
-            speed.1 = 150.; 
+            speed.1 = 150.;
         }
         if speed.1 * -1. > 150. {
-            speed.1 = -150.; 
+            speed.1 = -150.;
         }
 
         transform.translation += Vec3::new(
@@ -184,7 +180,7 @@ fn player_movement(
             0.,
         );
 
-        if transform.translation.y > win_size.h/2. {
+        if transform.translation.y > win_size.h / 2. {
             speed.1 *= -1.;
         }
         if transform.translation.y < bottom {
@@ -200,50 +196,33 @@ fn collision(
         Query<(&PlayerSpeed, &mut Transform, With<Player>)>,
     )>,
     win_size: Res<WinSize>,
-    //mut wall_queries: Query<(&Wall, &Transform)>,
     keyboard_input: Res<Input<KeyCode>>,
-    //mut player_query: Query<(&PlayerSpeed, &mut Transform, With<Player>)>,
 ) {
-    //println!("running functoin {}", wall_query.single_mut());
-    // match wall_query.single_mut() {
-    //     Ok(expr) => println!("{:?}", expr.0),
-    //     Err(t) => println!("{:?}", t),
-    // }
-    let bottom = -win_size.h/2.;
+    let bottom = -win_size.h / 2.;
     let mut speed = (0., 0.);
     let (mut player_x, mut player_y) = (0., 0.);
     if let Ok((mut speed, mut player_transform, _)) = queries.q1_mut().single_mut() {
-            if player_transform.translation.y < bottom+100. {
-                player_transform.translation.y = bottom+100.;
-            }
-            player_x = player_transform.translation.x;
-            player_y = player_transform.translation.y;
+        if player_transform.translation.y < bottom + 100. {
+            player_transform.translation.y = bottom + 100.;
+        }
+        player_x = player_transform.translation.x;
+        player_y = player_transform.translation.y;
     }
     for wall_query in queries.q0_mut().iter_mut() {
-        //if let Ok((Wall(x, y, damagble))) = wall_query.single_mut() {
         let (Wall(x, y, damagble), mut transform) = wall_query;
-
 
         let x = transform.translation.x;
         let y = transform.translation.y;
 
         let collision = collide(
             Vec3::new(player_x, player_y, 10.),
-            Vec2::new(60., 40.),
-            //sprite.size(),
+            Vec2::new(180., 55.),
             Vec3::new(x, y, 10.),
             Vec2::new(50., 50.),
         );
 
-        // if (player_y < y + 100. && player_y > y) {
-        //     if (x + 100. < -100. && x > -100.) {
-        //         println!("deada");
-        //         use std::process;
-        //         process::exit(0x0100);
-        //     }
-        // }
         if let Some(collision) = collision {
-            if(*damagble) {
+            if (*damagble) {
                 println!("deadb");
             }
             use std::process;
@@ -254,12 +233,15 @@ fn collision(
         } else {
             speed.0 = 0.;
         }
+
         let mut rng = rand::thread_rng();
         let random: f32 = rng.gen();
         transform.translation.x -= 4.;
-        if transform.translation.x < win_size.w/2. * -1. {
-            transform.translation.x = win_size.w/2.;
-            transform.translation.y = random * (-1.*(-win_size.h / 2. + 100.)+ win_size.h/2.) -1. * win_size.h / 2. + 100.;
+        if transform.translation.x < win_size.w / 2. * -1. {
+            transform.translation.x = win_size.w / 2.;
+            transform.translation.y = random * (-1. * (-win_size.h / 2. + 100.) + win_size.h / 2.)
+                - 1. * win_size.h / 2.
+                + 100.;
         }
     }
 }
