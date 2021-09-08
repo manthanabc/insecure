@@ -1,7 +1,6 @@
-// WARNING this code is a mess and dont ask me why i made it in last 9 hrs with three days of experiance with bevy 
-// background image by AppleLaught(Reddit) lincese CC
-// submarine and mines images by my partner Seebass22 lincense idk ask him
-// this code is an bad examplee of how esc should be used and if you find something usefull (which i highly dought) feel free to use it in your own games
+// WARNING this code is a mess and don't ask me why. I made it in last 9 hrs with three days of experience with bevy
+// submarine and mines images by my partner Seebass22
+// this code is an bad example of how ECS should be used and if you find something useful (which I highly doubt), feel free to use it in your own games
 
 #![allow(unused)]
 
@@ -10,17 +9,13 @@ use bevy::sprite::collide_aabb::{collide, Collision};
 use rand::prelude::*;
 
 const PLAYER_SPRITE: &str = "submarine.png";
-const SPRITES: &str = "wall.png";
 const MINE: &str = "mine.png";
-const BACKGROUD: &str = "background.png";
 //Entity, Component, System, Resource
 
 // < Resources >
 pub struct Materials {
     player_materials: Handle<ColorMaterial>,
-    sprites_materials: Handle<ColorMaterial>,
     mine_materials: Handle<ColorMaterial>,
-    backgroud: Handle<ColorMaterial>,
 }
 struct WinSize {
     w: f32,
@@ -86,9 +81,7 @@ fn setup(
     // create the main resources
     commands.insert_resource(Materials {
         player_materials: materials.add(asset_server.load(PLAYER_SPRITE).into()),
-        sprites_materials: materials.add(asset_server.load(SPRITES).into()),
         mine_materials: materials.add(asset_server.load(MINE).into()),
-        backgroud: materials.add(asset_server.load(BACKGROUD).into()),
     });
     commands.insert_resource(WinSize {
         w: window.width(),
@@ -99,16 +92,6 @@ fn setup(
     let mut window = windows.get_primary_mut().unwrap();
     window.set_position(IVec2::new(500, 500));
 
-    // adding the walls
-    commands.spawn_bundle(SpriteBundle {
-        material: materials.add(asset_server.load(BACKGROUD).into()),
-        transform: Transform {
-            translation: Vec3::new(0., 0., 1.),
-            scale: Vec3::new(1.0, 1.0, 1.),
-            ..Default::default()
-        },
-        ..Default::default()
-    });
     // adding the mines
     let mut rng = rand::thread_rng();
     let random: f32 = rng.gen();
